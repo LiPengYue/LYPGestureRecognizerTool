@@ -22,14 +22,15 @@
     imageView.center = self.view.center;
     imageView.bounds = CGRectMake(0, 0, 300, 300);
     [self.view addSubview:imageView];
-    //[LYPGestureRecognizerTool pinchWithView:imageView andPinchBlock:nil];
+    [LYPGestureRecognizerTool pinchWithView:imageView andIsSupportMoreGesture:YES  andPinchBlock:nil];
 
-    //[LYPGestureRecognizerTool rotationWithView:imageView andRotationBlock:nil];
-    //[LYPGestureRecognizerTool panWithView:imageView andPanBlock:nil];
-    [LYPGestureRecognizerTool swipeWithView:imageView andSwipeGrestureDirection:UISwipeGestureRecognizerDirectionLeft andSwipeBlock:nil];
-    [LYPGestureRecognizerTool swipeWithView:imageView andSwipeGrestureDirection:UISwipeGestureRecognizerDirectionUp andSwipeBlock:nil];
-    [LYPGestureRecognizerTool swipeWithView:imageView andSwipeGrestureDirection:UISwipeGestureRecognizerDirectionDown andSwipeBlock:nil];
-    [LYPGestureRecognizerTool swipeWithView:imageView andSwipeGrestureDirection:UISwipeGestureRecognizerDirectionRight andSwipeBlock:nil];
+    [LYPGestureRecognizerTool rotationWithView:imageView andIsSupportMoreGesture:YES  andRotationBlock:nil];
+    [LYPGestureRecognizerTool panWithView:imageView andIsSupportMoreGesture:YES  andPanBlock:nil];
+    
+    [LYPGestureRecognizerTool swipeWithView:imageView andIsSupportMoreGesture:YES andSwipeGrestureDirection:UISwipeGestureRecognizerDirectionLeft andSwipeBlock:nil];
+    [LYPGestureRecognizerTool swipeWithView:imageView andIsSupportMoreGesture:YES  andSwipeGrestureDirection:UISwipeGestureRecognizerDirectionUp andSwipeBlock:nil];
+    [LYPGestureRecognizerTool swipeWithView:imageView andIsSupportMoreGesture:YES  andSwipeGrestureDirection:UISwipeGestureRecognizerDirectionDown andSwipeBlock:nil];
+    [LYPGestureRecognizerTool swipeWithView:imageView andIsSupportMoreGesture:YES  andSwipeGrestureDirection:UISwipeGestureRecognizerDirectionRight andSwipeBlock:nil];
 }
 
 

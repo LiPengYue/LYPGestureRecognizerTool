@@ -38,7 +38,7 @@ static id _instancetype;
 
 
 #pragma mark - tap点击手势
-+ (void)tapWithView: (UIView *)view andNumberOfTouches: (NSInteger)numberOfTouches andNumberOfTaps: (NSInteger)numberOfTaps andSelectorBlock:(void(^)(UITapGestureRecognizer *tap))selectorBlock {
++ (void)tapWithView: (UIView *)view andIsSupportMoreGesture: (BOOL)isSupportMoreGesture andNumberOfTouches: (NSInteger)numberOfTouches andNumberOfTaps: (NSInteger)numberOfTaps andSelectorBlock:(void(^)(UITapGestureRecognizer *tap))selectorBlock {
     LYPGestureRecognizerTool *gesture = [self sharedGestureRecognizerTool];
     view.userInteractionEnabled = YES;
     //创建tap手势
@@ -58,45 +58,50 @@ static id _instancetype;
 
 
 #pragma mark - pinch捏合手势
-+ (void)pinchWithView: (UIView *)view andPinchBlock: (void(^)(BOOL isGestureRecognizerStateEnded,UIPinchGestureRecognizer *pinch))pinchiBlock{
++ (void)pinchWithView: (UIView *)view andIsSupportMoreGesture: (BOOL)isSupportMoreGesture andPinchBlock: (void(^)(BOOL isGestureRecognizerStateEnded,UIPinchGestureRecognizer *pinch))pinchiBlock{
     //获取工具类
     LYPGestureRecognizerTool *gesture = [self sharedGestureRecognizerTool];
     //设置view的用户交互设置
     view.userInteractionEnabled = YES;
     //创建捏合手势
     UIPinchGestureRecognizer *pinchGesture = [[UIPinchGestureRecognizer alloc] initWithTarget:gesture action:@selector(pinchGesture:)];
+    pinchGesture.delegate = gesture;
     //添加手势
     [view addGestureRecognizer:pinchGesture];
 }
+
 - (void)pinchGesture: (UIPinchGestureRecognizer *)pinch {
-    
-    //判断状态
-    BOOL isGestureRecognizerStateEnded = pinch.state == UIGestureRecognizerStateEnded;
     
     //判断block 是否实现
     if (self.pinchBlock) {
-        self.pinchBlock(isGestureRecognizerStateEnded,pinch);
+        self.pinchBlock(pinch.state,pinch);
         return;
     }
-    //没有实现 判断是否停止手势了
-    if (isGestureRecognizerStateEnded) {
-        pinch.scale = 1;
-    }
-    //没有停止的话就改变view 的transform
-    pinch.view.transform = CGAffineTransformMakeScale(pinch.scale, pinch.scale);
+
+    
+    //1.获取手指的 缩放的大小
+    CGFloat scale = pinch.scale;
+    
+    //归零
+    pinch.scale = 1;
+    
+    //2.形变
+    pinch.view.transform = CGAffineTransformScale(pinch.view.transform, scale, scale);
+    
+    NSLog(@"------------");
 }
 
 
 #pragma mark - Pan拖动
-+ (void)panWithView: (UIView *)view andPanBlock: (void(^)(UIPanGestureRecognizer *panGesture))panBlock {
++ (void)panWithView: (UIView *)view andIsSupportMoreGesture: (BOOL)isSupportMoreGesture andPanBlock: (void(^)(UIPanGestureRecognizer *panGesture))panBlock {
     LYPGestureRecognizerTool *gestureTool = [self sharedGestureRecognizerTool];
     view.userInteractionEnabled = YES;
     UIPanGestureRecognizer *pan = [[UIPanGestureRecognizer alloc]initWithTarget:gestureTool action:@selector(pan:)];
+    pan.delegate = gestureTool;
     gestureTool.panBlock = panBlock;
     [view addGestureRecognizer:pan];
 }
 - (void)pan: (UIPanGestureRecognizer *)pan {
-    
     //视图前置操作
     [pan.view.superview bringSubviewToFront:pan.view];
     if (self.panBlock) {
@@ -121,10 +126,11 @@ static id _instancetype;
 }
 
 #pragma mark - longPress （长按手势）
-+ (void)longPressWithView: (UIView *)view andLongPressBlock: (void(^)())longPressBlock{
++ (void)longPressWithView: (UIView *)view andIsSupportMoreGesture: (BOOL)isSupportMoreGesture andLongPressBlock: (void(^)())longPressBlock{
     LYPGestureRecognizerTool *gestureTool = [self sharedGestureRecognizerTool];
     view.userInteractionEnabled = YES;
     UILongPressGestureRecognizer *longPress = [[UILongPressGestureRecognizer alloc]initWithTarget:gestureTool action:@selector(longPress:)];
+    longPress.delegate = gestureTool;
     gestureTool.longPressBlock = longPressBlock;
     [view addGestureRecognizer:longPress];
 }
@@ -137,11 +143,12 @@ static id _instancetype;
 
 
 #pragma mark - rotation(旋转手势)
-+ (void)rotationWithView: (UIView *)view andRotationBlock: (void(^)(CGFloat rotation,UIRotationGestureRecognizer *rotationGesture))rotationBlock {
++ (void)rotationWithView: (UIView *)view andIsSupportMoreGesture: (BOOL)isSupportMoreGesture andRotationBlock: (void(^)(CGFloat rotation,UIRotationGestureRecognizer *rotationGesture))rotationBlock {
     LYPGestureRecognizerTool *gestureTool = [self sharedGestureRecognizerTool];
     view.userInteractionEnabled = YES;
     UIRotationGestureRecognizer *rotationGesture = [[UIRotationGestureRecognizer alloc]initWithTarget:gestureTool action:@selector(rotationFunction:)];
     [view addGestureRecognizer:rotationGesture];
+    rotationGesture.delegate = gestureTool;
     gestureTool.rotationBlock = rotationBlock;
 }
 - (void)rotationFunction: (UIRotationGestureRecognizer *)rotationGestrue{
@@ -150,20 +157,27 @@ static id _instancetype;
         self.rotationBlock(rotationGestrue.rotation,rotationGestrue);
         return;
     }
+
+    //1.获取手指的 旋转角度
+    CGFloat angle = rotationGestrue.rotation;
     
-    rotationGestrue.view.transform = CGAffineTransformMakeRotation(rotationGestrue.rotation);
-    NSLog(@"%f",rotationGestrue.rotation);
+    //清零
+    rotationGestrue.rotation = 0;
+    //2.形变
+    rotationGestrue.view.transform = CGAffineTransformRotate(rotationGestrue.view.transform, angle);
+
+    NSLog(@"=====%f",rotationGestrue.rotation);
     NSLog(@"=====------%f",rotationGestrue.velocity);
   
 }
 
-+ (void)swipeWithView: (UIView *)view andSwipeGrestureDirection: (UISwipeGestureRecognizerDirection)direction andSwipeBlock: (void(^)(UISwipeGestureRecognizer *swipe))swipeBlock{
++ (void)swipeWithView: (UIView *)view andIsSupportMoreGesture: (BOOL)isSupportMoreGesture andSwipeGrestureDirection: (UISwipeGestureRecognizerDirection)direction andSwipeBlock: (void(^)(UISwipeGestureRecognizer *swipe))swipeBlock{
+   
     LYPGestureRecognizerTool *gestureTool = [self sharedGestureRecognizerTool];
     view.userInteractionEnabled = YES;
-
     UISwipeGestureRecognizer *swipe = [[UISwipeGestureRecognizer alloc]initWithTarget:gestureTool action:@selector(swipe:)];
     gestureTool.swipeBlock = swipeBlock;
-    
+    swipe.delegate = gestureTool;
     swipe.direction = direction;
     [view addGestureRecognizer:swipe];
 }
@@ -204,6 +218,11 @@ static id _instancetype;
         NSLog(@"UISwipeGestureRecognizerDirectionDown----4");
     }
     */
+}
+
+- (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer
+shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherGestureRecognizer{
+    return YES;
 }
 
 @end
